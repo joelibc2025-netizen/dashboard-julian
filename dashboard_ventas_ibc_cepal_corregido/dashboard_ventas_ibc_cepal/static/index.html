@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#14263d">
+  <title>Análisis de gestión y ventas | IBC · CEPAL</title>
+  <link rel="stylesheet" href="/static/style.css?v=202611021225">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Inicio">
+      <span class="brand-icon">↗</span>
+      <span><strong>IBC · CEPAL</strong><small>Panel de gestión comercial</small></span>
+    </a>
+    <div class="top-actions">
+      <span id="sourceName" class="source-name">Esperando archivo…</span>
+      <label class="button button-primary" for="workbook">＋ Cargar Excel</label>
+      <input id="workbook" type="file" accept=".xlsx" hidden>
+      <button id="export" class="button button-secondary">↓ Exportar informe</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">ANÁLISIS DE DATOS · FUENTE ÚNICA</p>
+        <h1>Gestión y resultados de ventas</h1>
+        <p class="subtitle">Comparativos por empresa, área, asesor y mes, con seguimiento del plazo de salvamento y el primer pago.</p>
+      </div>
+      <div id="periodLabel" class="period-label">—</div>
+    </section>
+
+    <div id="notice" class="notice" role="status">Cargando el detalle de ventas…</div>
+    <div id="warning" class="warning" hidden></div>
+
+    <section class="filters panel" aria-label="Filtros">
+      <label>Empresa<select id="company"><option value="">Todas las empresas</option></select></label>
+      <label>Área<select id="area"><option value="">Todas las áreas</option></select></label>
+      <label>Asesor<select id="advisor"><option value="">Todos los asesores</option></select></label>
+      <label>Clasificación<select id="classification"><option value="">Todas</option></select></label>
+      <label>Momento<select id="momentMode"><option value="all">Todos</option><option value="days">MOMENTO DÍAS</option><option value="payment">MOMENTO PRIMER PAGO</option></select></label>
+      <label>Mes<select id="month"><option value="">Todos los meses</option></select></label>
+      <label>Desde<input id="dateFrom" type="date"></label>
+      <label>Hasta<input id="dateTo" type="date"></label>
+      <label class="search-label">Buscar<input id="search" type="search" placeholder="Cliente, DNI, gestión…"></label>
+      <button id="clear" class="button button-quiet">Limpiar</button>
+    </section>
+
+    <section class="metrics" aria-label="Indicadores">
+      <article class="metric metric-blue"><span>Registros analizados</span><strong id="totalMetric">0</strong><small>Casos del filtro actual</small></article>
+      <article class="metric metric-blue"><span>Total área de Ventas</span><strong id="salesAreaMetric">0</strong><small id="salesAreaShare">—</small></article>
+      <article class="metric metric-blue"><span>Total área de Atención al Cliente</span><strong id="atcAreaMetric">0</strong><small id="atcAreaShare">—</small></article>
+      <article class="metric metric-purple"><span>Cruces de casos</span><strong id="crossCaseMetric">0</strong><small id="crossCaseDescription">DNI en Ventas y ATC · misma empresa</small></article>
+      <article class="metric metric-indigo"><span>Intentos de anulación</span><strong id="annulmentMetric">0</strong><small id="annulmentDescription">Ventas salvadas + ventas caídas</small></article>
+      <article class="metric metric-green"><span>Ventas salvadas</span><strong id="savedMetric">0</strong><small id="savedRate">—</small></article>
+      <article class="metric metric-red"><span>Ventas caídas</span><strong id="fallenMetric">0</strong><small id="fallenShare">—</small></article>
+      <article class="metric metric-amber"><span>Otras gestiones</span><strong id="otherMetric">0</strong><small id="otherShare">Clasificación del Excel</small></article>
+      <article id="withinMetricCard" class="metric metric-teal"><span>Salvadas dentro de 3 días</span><strong id="withinMetric">0</strong><small id="withinShare">Según MOMENTO DÍAS</small></article>
+      <article id="outsideMetricCard" class="metric metric-purple"><span>Salvadas fuera de 3 días</span><strong id="outsideMetric">0</strong><small id="outsideShare">Según MOMENTO DÍAS</small></article>
+      <article id="fallenWithinMetricCard" class="metric metric-amber"><span>Caídas dentro de 3 días</span><strong id="fallenWithinMetric">0</strong><small id="fallenWithinShare">Según MOMENTO DÍAS</small></article>
+      <article id="fallenOutsideMetricCard" class="metric metric-red"><span>Caídas fuera de 3 días</span><strong id="fallenOutsideMetric">0</strong><small id="fallenOutsideShare">Según MOMENTO DÍAS</small></article>
+      <article id="otherWithinMetricCard" class="metric metric-amber"><span>Otras gestiones dentro de 3 días</span><strong id="otherWithinMetric">0</strong><small id="otherWithinShare">Según MOMENTO DÍAS</small></article>
+      <article id="otherOutsideMetricCard" class="metric metric-purple"><span>Otras gestiones fuera de 3 días</span><strong id="otherOutsideMetric">0</strong><small id="otherOutsideShare">Según MOMENTO DÍAS</small></article>
+      <article id="beforePaymentMetricCard" class="metric metric-teal" hidden><span>Salvadas antes del primer pago</span><strong id="beforePaymentMetric">0</strong><small id="paymentCoverage">Según MOMENTO PRIMER PAGO</small></article>
+      <article id="afterPaymentMetricCard" class="metric metric-blue" hidden><span>Salvadas después del primer pago</span><strong id="afterPaymentMetric">0</strong><small id="afterPaymentShare">Según MOMENTO PRIMER PAGO</small></article>
+      <article id="fallenBeforePaymentMetricCard" class="metric metric-amber" hidden><span>Caídas antes del primer pago</span><strong id="fallenBeforePaymentMetric">0</strong><small id="fallenBeforePaymentShare">Según MOMENTO PRIMER PAGO</small></article>
+      <article id="fallenAfterPaymentMetricCard" class="metric metric-red" hidden><span>Caídas después del primer pago</span><strong id="fallenAfterPaymentMetric">0</strong><small id="fallenAfterPaymentShare">Según MOMENTO PRIMER PAGO</small></article>
+      <article id="otherBeforePaymentMetricCard" class="metric metric-amber" hidden><span>Otras gestiones antes del primer pago</span><strong id="otherBeforePaymentMetric">0</strong><small id="otherBeforePaymentShare">Según MOMENTO PRIMER PAGO</small></article>
+      <article id="otherAfterPaymentMetricCard" class="metric metric-purple" hidden><span>Otras gestiones después del primer pago</span><strong id="otherAfterPaymentMetric">0</strong><small id="otherAfterPaymentShare">Según MOMENTO PRIMER PAGO</small></article>
+    </section>
+
+    <section class="chart-grid">
+      <article class="panel chart-panel">
+        <div class="section-heading"><div><p class="eyebrow">RESULTADOS</p><h2>Distribución de gestiones</h2></div><span class="muted">Clasificación fuente</span></div>
+        <div class="donut-layout"><div id="donut" class="donut"><div><strong id="donutTotal">0</strong><span>registros</span></div></div><div id="legend" class="legend"></div></div>
+      </article>
+      <article class="panel chart-panel">
+        <div class="section-heading"><div><p class="eyebrow">TENDENCIA</p><h2>Resultados por mes</h2></div><span class="muted">Fecha de gestión</span></div>
+        <div id="monthlyChart" class="svg-chart"></div>
+      </article>
+    </section>
+
+    <section class="chart-grid">
+      <article id="daysAnalysisPanel" class="panel">
+        <div class="section-heading"><div><p class="eyebrow">OPORTUNIDAD DE SALVAMENTO</p><h2>Ventas salvadas: momento de gestión</h2></div></div>
+        <p class="helper">Distribución de las ventas clasificadas como salvadas, usando directamente el valor de <b>MOMENTO DÍAS</b>.</p>
+        <div id="daysBreakdown" class="breakdown"></div>
+      </article>
+      <article id="paymentAnalysisPanel" class="panel" hidden>
+        <div class="section-heading"><div><p class="eyebrow">SEGUIMIENTO DE PAGO</p><h2>Salvadas antes o después del primer pago</h2></div></div>
+        <p class="helper">Distribución según <b>MOMENTO PRIMER PAGO</b>; se muestra aparte la cobertura de la fecha de pago.</p>
+        <div id="paymentBreakdown" class="breakdown"></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><p class="eyebrow">COMPARATIVO</p><h2>Resultados por empresa y área</h2></div><span class="muted">Porcentajes sobre el total de casos de cada grupo</span></div>
+      <div class="table-wrap"><table class="comparison-table"><thead id="companyAreaHead"></thead><tbody id="companyAreaTable"></tbody></table></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><p class="eyebrow">COMPARATIVO POR ÁREA</p><h2>Ventas y Atención al Cliente: salvadas y caídas</h2></div><span class="muted">Comparación dentro de cada empresa</span></div>
+      <p class="helper">Se comparan las áreas de Ventas y Atención al Cliente para cada momento. Este gráfico mantiene ambas áreas visibles aunque se seleccione un área en los filtros.</p>
+      <div class="area-comparison-grid">
+        <article class="area-comparison-card">
+          <h3 class="area-comparison-title saved-title">Ventas salvadas</h3>
+          <div id="savedAreaMomentChart" class="area-moment-chart"></div>
+        </article>
+        <article class="area-comparison-card">
+          <h3 class="area-comparison-title fallen-title">Ventas caídas</h3>
+          <div id="fallenAreaMomentChart" class="area-moment-chart"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><p class="eyebrow">RESULTADOS POR EMPRESA Y ÁREA</p><h2>Ventas salvadas y caídas por empresa y área</h2></div><span class="muted">Ventas frente a Atención al Cliente</span></div>
+      <p class="helper">Compara las ventas salvadas y caídas por separado para Ventas y Atención al Cliente dentro de cada empresa.</p>
+      <div id="companyOutcomeAreaChart" class="svg-chart company-outcome-chart"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><p class="eyebrow">EVOLUCIÓN</p><h2>Detalle mensual por empresa y área</h2></div><span class="muted">Cada empresa y área tiene su propio detalle mensual</span></div>
+    </section>
+    <div id="monthDetails" class="month-details"></div>
+
+    <section class="panel">
+      <div class="section-heading"><div><p class="eyebrow">DESEMPEÑO</p><h2>Comparativo por asesor</h2></div><span class="muted">El asesor se toma de la columna VENDEDOR</span></div>
+    </section>
+    <div id="advisorGroups" class="advisor-groups"></div>
+
+    <section class="panel detail-panel">
+      <div class="section-heading"><div><p class="eyebrow">TRAZABILIDAD</p><h2>Detalle de la gestión</h2></div><span id="detailCount" class="muted"></span></div>
+      <p class="helper">La fila muestra el resumen y las fechas de cada gestión.</p>
+      <div class="table-wrap"><table class="detail-table"><thead><tr><th>Fecha</th><th>Empresa</th><th>Área</th><th>Asesor</th><th>Cliente / DNI</th><th>Teléfono</th><th>Gestión registrada</th><th>Clasificación</th><th>Fecha de aceptación del producto</th><th>Plazo</th><th>Momento del pago</th><th>Fecha 1.er pago</th></tr></thead><tbody id="detailTable"></tbody></table></div>
+    </section>
+
+    <footer>Indicadores calculados únicamente con los datos del Excel cargado. No se asignan valores faltantes ni se recalculan los campos de clasificación del archivo.</footer>
+  </main>
+  <script src="/static/app.js?v=202611021225" defer></script>
+</body>
+</html>
